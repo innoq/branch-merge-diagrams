@@ -1,0 +1,466 @@
+#!/usr/bin/env ruby
+# -*- coding: utf-8 -*-
+
+# Copyright (C) 2013 innoQ Deutschland GmbH
+
+# Licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file
+# except in compliance with the License. You may
+# obtain a copy of the License at
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to
+# in writing, software distributed under the
+# License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for
+# the specific language governing permissions
+# and limitations under the License.
+
+# Author of this software: Andreas Krüger, <Andreas.Krueger@innoQ.com>
+
+# This script is intended as "use-once-then-forget".
+# Therefore, little effort has been expended to make it maintainable.
+
+if ARGV.count != 2 or ARGV[0] != "--overview" && ARGV[0] != "--timed"
+  $stderr.puts "\n\nUsage:\n   #{$0} --overview in.bd\n   #{$0} --timed #{$0}\n\nThere is no further docs. Read the source.\n\n"
+  exit 1
+end
+
+class DayWithWeek
+  attr_reader :day, :week
+  def initialize(day, week = :any_week)
+    @day = day
+    @week = week
+  end
+end
+
+class Branch
+
+  attr_reader :number, :title, :starting_time, :starting_from_branch
+  attr_accessor :x, :y, :color
+
+  def initialize(diag, argmap, &block)
+    @number = argmap[:number]
+    @title = argmap[:title]
+    @starting = nil
+    @diag = diag
+    if block_given?
+      self.instance_eval &block
+    end
+    if @number.nil? or @title.nil?
+      raise "Branch without :number or :title,"
+    end
+  end
+
+  def starting(argmap)
+    week = argmap[:week]
+    if week.nil?
+      raise "\"branch :number => #{@number} do starting\" without \":week => ...\""
+    end
+    @starting_time = DayWithWeek.new(argmap[:day], argmap[:week])
+    @starting_from_branch = @diag.grep_branch argmap[:from]
+    if starting_from_branch.nil?
+      raise "\"branch :number => #{@number} do starting\" without \":from => ...\""
+    end
+  end
+
+  def to_s
+    result = "branch :number => #{@number}, :title => #{@title}"
+    if ! @starting_time.nil?
+      result += " do\n  starting :day => #{@starting_time.day}, :week => #{@starting_time.week}, :from => #{starting_from_branch}\nend\n"
+    end
+    result
+  end
+end
+
+class Merge
+
+  attr_reader :from_branch, :to_branch, :starting_time, :schedule
+
+  def initialize(diag, argmap, &block)
+    @from_branch = diag.grep_branch argmap[:from]
+    @to_branch = diag.grep_branch argmap[:to]
+    @week = 1
+    if from_branch.nil? or to_branch.nil?
+      raise "merge requires \":from => ..., :to => ...\""
+    end
+    if block_given?
+      self.instance_eval &block
+      if @day.nil?
+        raise "Merge needs an \"each :day => ...\" stance."
+      else
+        @schedule = DayWithWeek.new(@day)
+        @starting_time = DayWithWeek.new(@day, @week)
+      end
+    else
+      raise "merge :from => #{@from_branch}, :to => #{@to_branch} needs block"
+    end
+  end
+
+  def each(argmap)
+    @day = argmap[:day]
+    if @day.nil?
+      raise "each needs :day => ..."
+    end
+  end
+
+  def starting(argmap)
+    @week = argmap[:week]
+    if @week.nil?
+      raise "starting needs :week => ... (in context merge)"
+    end
+  end
+end
+
+class Branchdiagramm
+
+  attr_reader :weeks, :branches, :merges
+
+  def initialize
+    @weeks = nil
+    @branches = []
+    @merges = []
+  end
+
+  def branch_diagramm(argmap, &block)
+    argmap.each_key do |key|
+      if(key === :weeks)
+        @weeks = 0 + argmap[:weeks]
+        raise "need 1 week or more" unless 0 < @weeks
+      else
+        raise "branch_diagramm #{key.to_s} => #{argmap[key]} not implemented"
+      end
+    end
+    if @weeks.nil? 
+      raise "Missing 'branch_diagramm :weeks => N'"
+    end
+    self.instance_eval &block
+  end
+
+  def branch(argmap, &block)
+    @branches.push(Branch.new(self, argmap, &block))
+  end
+
+  def merge(argmap, &block)
+    @merges.push(Merge.new(self, argmap, &block))
+  end
+
+  def grep_branch(number)
+    result = branches.find {|b| b.number == number }
+    if result.nil?
+      raise "Could not find branch for number #{number}"
+    end
+    result
+  end
+end
+
+diag = Branchdiagramm.new
+diag.instance_eval(File.read(ARGV[1]))
+
+$day_to_presentationday = {
+  :monday => 'Mo',
+  :tuesday => 'Di',
+  :wednesday => 'Mi',
+  :thursday => 'Do',
+  :friday => 'Fr',
+  :saturday => 'Sa',
+  :sunday => 'So',
+}
+
+$merge_color = '#00f010'
+
+$prod_color = '#ffb020'
+$test_color = '#ffff00'
+$intg_color = $test_color # '#ff0000'
+$dev1_color = '#4c90ff'
+$dev2_color = $dev1_color
+
+if diag.branches.length == 4
+  diag.branches[0].color = $prod_color
+  diag.branches[1].color = $dev2_color
+  diag.branches[2].color = $intg_color
+  diag.branches[3].color = $dev1_color
+else
+  diag.branches[0].color = $prod_color
+  diag.branches[1].color = $test_color
+  diag.branches[2].color = $dev1_color
+end
+
+if ARGV[0] == "--overview"
+
+  $box_x_right = 120
+
+  $box_y_up = 25
+  $box_y_down = 30
+
+  $font_size = 17
+  $line_height = 20
+
+  $gap = 17
+  $merge_arrowhead_length = 10 # Estimated
+
+  $branch_x_first = 50
+  $branch_y_first = 50
+
+  $space_for_merge_arrow = 70
+  $branch_to_branch_dx = $box_x_right + 
+    2 * $gap + $space_for_merge_arrow
+  $branch_to_branch_dy = $box_y_up + $box_y_down + 
+    2 * $gap + $space_for_merge_arrow
+
+  $dx_left_margin = 20
+  $dy_bottom_margin = 30
+
+  if diag.branches.length == 4
+
+    diag.branches[0].x = $branch_x_first
+    diag.branches[0].y = $branch_y_first
+    
+    diag.branches[1].x = $branch_x_first + $branch_to_branch_dx
+    diag.branches[1].y = $branch_y_first
+  
+    diag.branches[2].x = $branch_x_first
+    diag.branches[2].y = $branch_y_first + $branch_to_branch_dy
+  
+    diag.branches[3].x = $branch_x_first + $branch_to_branch_dx
+    diag.branches[3].y = $branch_y_first + $branch_to_branch_dy
+
+    $total_width = $branch_x_first + $branch_to_branch_dx + $box_x_right
+    $total_height = $branch_y_first + $branch_to_branch_dy + $box_y_down
+
+  else
+
+    x = $branch_x_first
+    diag.branches.each do |branch|
+      branch.x = x
+      x += $branch_to_branch_dx
+      branch.y = $branch_y_first
+      $total_width = branch.x + $box_x_right
+    end
+
+    $total_height = $branch_y_first + $box_y_down
+
+  end
+
+  $total_width += $dx_left_margin
+  $total_height += $dy_bottom_margin
+
+  # Firefox seems to have problems displaying svgs with odd dimensions
+  while 0 < $total_width % 2
+    $total_width += 1
+  end
+  while 0 < $total_height % 2
+    $total_height += 1
+  end
+
+  $stderr.puts "total height is #{$total_height}"
+
+  puts \
+"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"#{$total_width}\" height=\"#{$total_height}\">
+  <defs>
+    <marker id=\"mergearrow\"
+      viewBox=\"0 0 20 16\" refX=\"5\" refY=\"8\"
+      markerUnits=\"strokeWidth\"
+      markerWidth=\"3\" markerHeight=\"2\"
+      orient=\"auto\">
+      <path d=\"M 0 0 L 0 16 L 20 8 Z\" fill=\"#{$merge_color}\" />
+    </marker>
+    <style type=\"text/css\"><![CDATA[
+      .merge {
+        stroke: #{$merge_color};
+        fill: none;
+        stroke-width: 7;
+        marker-end: url(#mergearrow);
+      }
+      text {
+        font-family: \"FreeSans\", sans-serif;
+        fill: #000000;
+        font-style: normal;
+        font-weight: normal;
+        font-size: #{$font_size}px;
+        text-anchor: middle;
+      }
+    ]]></style>
+  </defs>"
+
+  diag.branches.each do |branch|
+    x = branch.x + 0.5 * $box_x_right
+    puts \
+"  <rect x=\"#{branch.x}\" y=\"#{branch.y-$box_y_up}\" width=\"#{$box_x_right}\" height=\"#{$box_y_up + $box_y_down}\" fill=\"#{branch.color}\" />
+  <text x=\"#{x}\" y=\"#{branch.y}\">#{branch.number}</text>
+  <text x=\"#{x}\" y=\"#{branch.y + $line_height}\">#{branch.title}</text>"
+  end
+  diag.merges.each do |merge|
+    fb = merge.from_branch
+    tb = merge.to_branch
+    mergeday = $day_to_presentationday[merge.schedule.day]
+    if (fb.y == tb.y)
+      y = fb.y + ($box_y_down - $box_y_up) / 2
+      x = fb.x + $box_x_right + $gap
+      dx = tb.x - x - $gap - $merge_arrowhead_length
+
+      puts "  <path d=\"M #{x} #{y} l #{dx} 0\" class=\"merge\" />"
+      # I expected 0.25 * $font_size, but 0.31 looked better. ?
+      # puts "  <text x=\"#{x + 0.5*dx}\" y=\"#{y + 0.31 * $font_size}\" class=\"mergeday\">#{mergeday}</text>"
+    else
+      x = fb.x + $box_x_right / 2
+      y = fb.y + $box_y_down + $gap
+      dy = tb.y - y - $box_y_up - $gap - $merge_arrowhead_length
+
+      puts " <path d=\"M #{x} #{y} l 0 #{dy}\" class=\"merge\" />"
+      # The 0.5 * $font_size was arrived at experimentally.
+      # puts " <text x=\"#{x}\" y=\"#{y + 0.5*dy + 0.5 * $font_size}\" class=\"mergeday\" >#{mergeday}</text>"
+    end
+  end
+  puts '</svg>'
+else
+
+  $dx_for_branchnr = 100
+  $dx_per_week = 220
+  $dx_right_margin = 30
+
+  $days = [ :monday, :tuesday, :wednesday, :thursday, 
+            :friday, :saturday, :sunday]
+  $days_to_offset_in_week = {}
+  offset_in_week = 0
+  $days.each do |day|
+    $days_to_offset_in_week[day] = offset_in_week
+    offset_in_week += 1
+  end
+
+  def x_for_time(day, week)
+    $dx_for_branchnr + 
+      $dx_per_week * (week - 1 + $days_to_offset_in_week[day] / 7.0)
+  end
+
+  $x_endof_branchline = $dx_for_branchnr + diag.weeks * $dx_per_week
+
+  $font_size = 20
+
+  $y_first_branch = 30
+  $dy_per_branch = 60
+
+  $dy_for_timeline = 80
+  $timeline_caption_fontsize = 14
+
+  $y_this_branch = $y_first_branch - $dy_per_branch
+  diag.branches.each do |branch|
+    $y_this_branch += $dy_per_branch
+    branch.y = $y_this_branch
+  end
+
+  $y_timeline = $y_this_branch + 70
+  $bottom_margin = 30
+
+  $total_width =    x_for_time(:monday, 1 + diag.weeks) + $dx_right_margin
+  $total_height = $y_timeline + $bottom_margin
+
+  $branch_line_stroke = 25
+  $d_arc = 14
+
+  puts \
+"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"#{$total_width}\" height=\"#{$total_height}\">
+  <defs>
+    <marker id=\"mergearrow\"
+      viewBox=\"0 0 20 16\" refX=\"5\" refY=\"8\"
+      markerUnits=\"strokeWidth\"
+      markerWidth=\"3\" markerHeight=\"2\"
+      orient=\"auto\">
+      <path d=\"M 0 0 L 0 16 L 20 8 Z\" fill=\"#{$merge_color}\" />
+    </marker>
+    <marker id=\"timearrow\"
+      viewBox=\"0 0 20 16\" refX=\"5\" refY=\"8\"
+      markerUnits=\"strokeWidth\"
+      markerWidth=\"9\" markerHeight=\"9\"
+      orient=\"auto\">
+      <path d=\"M 0 0 L 0 16 L 20 8 Z\" fill=\"#000000\" />
+    </marker>
+    <style type=\"text/css\"><![CDATA[
+      .merge {
+        stroke: #{$merge_color};
+        fill: none;
+        stroke-width: 7;
+        marker-end: url(#mergearrow);
+      }
+      .timeline {
+        marker-end: url(#timearrow);
+      }
+      .branchline {
+        fill: none;
+        stroke-width: #{$branch_line_stroke};
+      }
+      text {
+        font-family: \"FreeSans\", sans-serif;
+        fill: #000000;
+        font-style: normal;
+        font-weight: normal;
+      }
+      text.branchnr, text.branchtitle, text.mergeday {
+        font-size: #{$font_size}px;
+      }
+      text.day {
+        text-anchor: middle;
+        font-size: #{$timeline_caption_fontsize};
+      }
+    ]]></style>
+  </defs>"
+
+  # Draw the branch numbers and branch lines
+  diag.branches.each do |branch|
+    by = branch.y
+    puts \
+"  <text x=\"0\" y=\"#{branch.y + 0.31 * $font_size}\" class=\"branchnr\">#{branch.number}</text>"
+    branch_start_time = branch.starting_time
+    if branch_start_time.nil?
+      bx = $dx_for_branchnr - $branch_line_stroke * 1.5
+      puts \
+      "  <path d=\"M #{bx} #{by} L #{$x_endof_branchline} #{by}\" stroke=\"#{branch.color}\" class=\"branchline\" />
+"
+    else
+      from_branch = branch.starting_from_branch
+      fy = from_branch.y
+      fx = x_for_time(branch_start_time.day, branch_start_time.week)
+      bx = $x_endof_branchline
+      puts \
+      "  <path d=\"M #{fx - $d_arc} #{fy} a #{$d_arc} #{$d_arc} 0 0 1 #{$d_arc} #{$d_arc} L #{fx} #{by - $d_arc} A #{$d_arc} #{$d_arc} 0 0 0 #{fx + $d_arc} #{by} L #{bx} #{by}\" stroke=\"#{branch.color}\" class=\"branchline\" />"
+    end
+  end
+
+  # Draw the merges
+  diag.merges.each do |merge|
+
+    fby = merge.from_branch.y
+    tby = merge.to_branch.y
+
+    start = merge.starting_time
+    start_week = start.nil? ? 1 : start.week
+    day_of_week = merge.schedule.day
+    (start_week .. diag.weeks).each do |week|
+      x = x_for_time(day_of_week, week)
+      puts \
+      "  <path d=\"M #{x - $d_arc} #{fby} a #{$d_arc} #{$d_arc} 0 0 1 #{$d_arc} #{$d_arc} L #{x} #{tby - $d_arc} a #{$d_arc} #{$d_arc} 0 0 0 #{$d_arc} #{$d_arc} l 4 0\" class=\"merge\" />"
+    end
+  end
+
+  # Draw the timeline
+  y_line = $y_timeline - $timeline_caption_fontsize * 1.3
+  (1 .. diag.weeks).each do |week|
+    $days.each do |day|
+      x = x_for_time(day, week)
+      pd = $day_to_presentationday[day]
+      puts \
+"  <text x=\"#{x}\" y=\"#{$y_timeline}\" class=\"day\">#{pd}</text>
+  <path d=\"M #{x} #{y_line - 0.3 * $timeline_caption_fontsize} l 0 #{0.6 * $timeline_caption_fontsize}\" stroke=\"#000000\" /> "
+    end
+  end
+
+  # Draw the line with some overlap
+  x_start = x_for_time(:sunday, 0)
+  x_end = x_for_time(:monday, 1 + diag.weeks)
+
+  puts \
+  "  <path d=\"M #{x_start} #{y_line} L #{x_end} #{y_line}\" stroke=\"#000000\" class=\"timeline\" />"
+
+  puts "</svg>"
+end
