@@ -4,7 +4,7 @@ simple one-off script to generate branch/merge SVG diagrams
 Example
 -------
 
-    branch_diagramm :weeks => 4 do
+    branch_diagram :weeks => 4 do
 
       branch :number => "1.25", :title => "Produktion"
 
