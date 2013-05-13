@@ -4,7 +4,7 @@ simple one-off script to generate branch/merge SVG diagrams
 Example
 -------
 
-    branch_diagramm :weeks => 4 do
+    branch_diagram :weeks => 4 do
 
       branch :number => "1.25", :title => "Produktion"
 
@@ -107,61 +107,61 @@ This results in
       <path d="M 588.857142857143 150 a 14 14 0 0 1 14 14 L 602.857142857143 196 a 14 14 0 0 0 14 14 l 4 0" class="merge" />
       <path d="M 808.857142857143 150 a 14 14 0 0 1 14 14 L 822.857142857143 196 a 14 14 0 0 0 14 14 l 4 0" class="merge" />
       <text x="100.0" y="280" class="day">Mo</text>
-      <path d="M 100.0 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 100.0 257.6 l 0 8.4" stroke="#000000" />
       <text x="131.428571428571" y="280" class="day">Di</text>
-      <path d="M 131.428571428571 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 131.428571428571 257.6 l 0 8.4" stroke="#000000" />
       <text x="162.857142857143" y="280" class="day">Mi</text>
-      <path d="M 162.857142857143 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 162.857142857143 257.6 l 0 8.4" stroke="#000000" />
       <text x="194.285714285714" y="280" class="day">Do</text>
-      <path d="M 194.285714285714 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 194.285714285714 257.6 l 0 8.4" stroke="#000000" />
       <text x="225.714285714286" y="280" class="day">Fr</text>
-      <path d="M 225.714285714286 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 225.714285714286 257.6 l 0 8.4" stroke="#000000" />
       <text x="257.142857142857" y="280" class="day">Sa</text>
-      <path d="M 257.142857142857 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 257.142857142857 257.6 l 0 8.4" stroke="#000000" />
       <text x="288.571428571429" y="280" class="day">So</text>
-      <path d="M 288.571428571429 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 288.571428571429 257.6 l 0 8.4" stroke="#000000" />
       <text x="320.0" y="280" class="day">Mo</text>
-      <path d="M 320.0 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 320.0 257.6 l 0 8.4" stroke="#000000" />
       <text x="351.428571428571" y="280" class="day">Di</text>
-      <path d="M 351.428571428571 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 351.428571428571 257.6 l 0 8.4" stroke="#000000" />
       <text x="382.857142857143" y="280" class="day">Mi</text>
-      <path d="M 382.857142857143 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 382.857142857143 257.6 l 0 8.4" stroke="#000000" />
       <text x="414.285714285714" y="280" class="day">Do</text>
-      <path d="M 414.285714285714 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 414.285714285714 257.6 l 0 8.4" stroke="#000000" />
       <text x="445.714285714286" y="280" class="day">Fr</text>
-      <path d="M 445.714285714286 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 445.714285714286 257.6 l 0 8.4" stroke="#000000" />
       <text x="477.142857142857" y="280" class="day">Sa</text>
-      <path d="M 477.142857142857 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 477.142857142857 257.6 l 0 8.4" stroke="#000000" />
       <text x="508.571428571429" y="280" class="day">So</text>
-      <path d="M 508.571428571429 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 508.571428571429 257.6 l 0 8.4" stroke="#000000" />
       <text x="540.0" y="280" class="day">Mo</text>
-      <path d="M 540.0 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 540.0 257.6 l 0 8.4" stroke="#000000" />
       <text x="571.428571428571" y="280" class="day">Di</text>
-      <path d="M 571.428571428571 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 571.428571428571 257.6 l 0 8.4" stroke="#000000" />
       <text x="602.857142857143" y="280" class="day">Mi</text>
-      <path d="M 602.857142857143 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 602.857142857143 257.6 l 0 8.4" stroke="#000000" />
       <text x="634.285714285714" y="280" class="day">Do</text>
-      <path d="M 634.285714285714 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 634.285714285714 257.6 l 0 8.4" stroke="#000000" />
       <text x="665.714285714286" y="280" class="day">Fr</text>
-      <path d="M 665.714285714286 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 665.714285714286 257.6 l 0 8.4" stroke="#000000" />
       <text x="697.142857142857" y="280" class="day">Sa</text>
-      <path d="M 697.142857142857 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 697.142857142857 257.6 l 0 8.4" stroke="#000000" />
       <text x="728.571428571429" y="280" class="day">So</text>
-      <path d="M 728.571428571429 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 728.571428571429 257.6 l 0 8.4" stroke="#000000" />
       <text x="760.0" y="280" class="day">Mo</text>
-      <path d="M 760.0 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 760.0 257.6 l 0 8.4" stroke="#000000" />
       <text x="791.428571428571" y="280" class="day">Di</text>
-      <path d="M 791.428571428571 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 791.428571428571 257.6 l 0 8.4" stroke="#000000" />
       <text x="822.857142857143" y="280" class="day">Mi</text>
-      <path d="M 822.857142857143 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 822.857142857143 257.6 l 0 8.4" stroke="#000000" />
       <text x="854.285714285714" y="280" class="day">Do</text>
-      <path d="M 854.285714285714 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 854.285714285714 257.6 l 0 8.4" stroke="#000000" />
       <text x="885.714285714286" y="280" class="day">Fr</text>
-      <path d="M 885.714285714286 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 885.714285714286 257.6 l 0 8.4" stroke="#000000" />
       <text x="917.142857142857" y="280" class="day">Sa</text>
-      <path d="M 917.142857142857 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 917.142857142857 257.6 l 0 8.4" stroke="#000000" />
       <text x="948.571428571429" y="280" class="day">So</text>
-      <path d="M 948.571428571429 257.6 l 0 8.4" stroke="#000000" /> 
+      <path d="M 948.571428571429 257.6 l 0 8.4" stroke="#000000" />
       <path d="M 68.5714285714286 261.8 L 980.0 261.8" stroke="#000000" class="timeline" />
      </g>
     </svg>

@@ -113,7 +113,7 @@ class Merge
   end
 end
 
-class Branchdiagramm
+class BranchDiagram
 
   attr_reader :weeks, :branches, :merges
 
@@ -123,17 +123,17 @@ class Branchdiagramm
     @merges = []
   end
 
-  def branch_diagramm(argmap, &block)
+  def branch_diagram(argmap, &block)
     argmap.each_key do |key|
       if(key === :weeks)
         @weeks = 0 + argmap[:weeks]
         raise "need 1 week or more" unless 0 < @weeks
       else
-        raise "branch_diagramm #{key.to_s} => #{argmap[key]} not implemented"
+        raise "branch_diagram #{key.to_s} => #{argmap[key]} not implemented"
       end
     end
-    if @weeks.nil? 
-      raise "Missing 'branch_diagramm :weeks => N'"
+    if @weeks.nil?
+      raise "Missing 'branch_diagram :weeks => N'"
     end
     self.instance_eval &block
   end
@@ -155,7 +155,7 @@ class Branchdiagramm
   end
 end
 
-diag = Branchdiagramm.new
+diag = BranchDiagram.new
 diag.instance_eval(File.read(ARGV[1]))
 
 $day_to_presentationday = {
@@ -204,9 +204,9 @@ if ARGV[0] == "--overview"
   $branch_y_first = 50
 
   $space_for_merge_arrow = 70
-  $branch_to_branch_dx = $box_x_right + 
+  $branch_to_branch_dx = $box_x_right +
     2 * $gap + $space_for_merge_arrow
-  $branch_to_branch_dy = $box_y_up + $box_y_down + 
+  $branch_to_branch_dy = $box_y_up + $box_y_down +
     2 * $gap + $space_for_merge_arrow
 
   $dx_left_margin = 20
@@ -216,13 +216,13 @@ if ARGV[0] == "--overview"
 
     diag.branches[0].x = $branch_x_first
     diag.branches[0].y = $branch_y_first
-    
+
     diag.branches[1].x = $branch_x_first + $branch_to_branch_dx
     diag.branches[1].y = $branch_y_first
-  
+
     diag.branches[2].x = $branch_x_first
     diag.branches[2].y = $branch_y_first + $branch_to_branch_dy
-  
+
     diag.branches[3].x = $branch_x_first + $branch_to_branch_dx
     diag.branches[3].y = $branch_y_first + $branch_to_branch_dy
 
@@ -320,7 +320,7 @@ else
   $dx_per_week = 220
   $dx_right_margin = 30
 
-  $days = [ :monday, :tuesday, :wednesday, :thursday, 
+  $days = [ :monday, :tuesday, :wednesday, :thursday,
             :friday, :saturday, :sunday]
   $days_to_offset_in_week = {}
   offset_in_week = 0
@@ -330,7 +330,7 @@ else
   end
 
   def x_for_time(day, week)
-    $dx_for_branchnr + 
+    $dx_for_branchnr +
       $dx_per_week * (week - 1 + $days_to_offset_in_week[day] / 7.0)
   end
 
